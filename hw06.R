@@ -1,7 +1,7 @@
 # Dominic Tanelli
 # Prof. Kropp
 # ENVST 325
-# 14 November 2024
+# 26 September 2024
 
 # Homework 6: Modeling and analyzing data
 
@@ -82,7 +82,7 @@ legend("topleft", c("data","AR1","AR4"), lty = c(1,2,2), lwd=c(1,2,2), col =
 newAlmond <- forecast(model4)
 newAlmond
 
-#make dataframe for plotting
+# make dataframe for plotting
 newAlmondF <- data.frame(newAlmond)
 
 # set up dates
@@ -136,51 +136,51 @@ output_table
 # Gets unique crop names
 crops <- unique(ETdat$crop)
 
-# Loop through each crop to filter, average, and decompose
+# Loops through each crop to filter, average, and decompose
 for (crop in crops) {
-  # Filter data for the current crop and calculate monthly ET average
+  # Filters data for the current crop and calculate monthly ET average
   crop_df <- ETdat %>%
     filter(crop == crop) %>%
     group_by(date) %>%
     summarise(ET.in = mean(Ensemble.ET, na.rm = TRUE))
   
-  # Convert date column to time series (assuming monthly data starting in 2016)
+  # Converts date column to time series (assuming monthly data starting in 2016)
   crop_ts <- ts(crop_df$ET.in, start = c(2016, 1), frequency = 12)
   
-  # Decompose the time series
+  # Decomposes the time series
   crop_dec <- decompose(crop_ts)
   
-  # Plot decomposition for each crop
+  # Plots decomposition for each crop
   plot(crop_dec)
   title(main = paste("ET Decomposition for", crop))  # Add title separately
 }
 
 # Question 3
-# This function processes/fits AR model and forecast for a given crop with the variable crop
+# This function processes/fits AR model and forecast for a given crop with the variable crop_name
 forecast_crop <- function(crop_name) {
-  # Filter and prepare time series data
+  # Filters and prepare time series data
   crop_df <- ETdat %>%
     filter(crop == crop_name) %>%
     mutate(date = ymd(date)) %>%
     group_by(date) %>%
     summarise(ET.in = mean(Ensemble.ET, na.rm = TRUE))
   
-  # Interpolate missing values with na.approx and ensure length consistency
+  # Exchanges missing values with na.approx and ensure length consistency
   crop_df$ET.in <- na.approx(crop_df$ET.in, na.rm = FALSE)
   
-  # Check if there are still NAs and remove them
+  # Checks if there are still NAs and remove them
   crop_df <- crop_df %>% filter(!is.na(ET.in))
   
-  # Create time series starting from 2016 with monthly data
+  # Creates time series starting from 2016 with monthly data
   crop_ts <- ts(crop_df$ET.in, start = c(2016, 1), frequency = 12)
   
-  # Fit an AR(4) model for the time series
+  # Fits an AR(4) model for the time series
   model <- arima(crop_ts, order = c(4, 0, 0))
   
-  # Forecast future values (next 24 months)
+  # Forecasts future values (next 24 months)
   crop_forecast <- forecast(model, h = 24)
   
-  # Convert forecast to a data frame for plotting
+  # Converts forecast to a data frame for plotting
   forecast_df <- data.frame(
     date = seq(ymd("2021-09-01"), by = "1 month", length.out = 24),
     ET.in = crop_forecast$mean,
@@ -188,7 +188,7 @@ forecast_crop <- function(crop_name) {
     Hi.95 = crop_forecast$upper[, 2]
   )
   
-  # Plot historical and forecasted ET
+  # Plots historical and forecasted ET
   ggplot() +
     geom_line(data = crop_df, aes(x = date, y = ET.in), color = "blue") +
     geom_line(data = forecast_df, aes(x = date, y = ET.in), color = "red") +
@@ -199,6 +199,6 @@ forecast_crop <- function(crop_name) {
     theme_minimal()
 }
 
-# Run forecasting function for pistachios and fallow/idle fields
+# Runs forecasting function for pistachios and fallow/idle fields
 forecast_crop("Pistachios")
 forecast_crop("Fallow/Idle Cropland")
